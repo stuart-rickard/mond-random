@@ -3,9 +3,9 @@ let tableEl = document.getElementById("table");
 const rows = 40;
 const columns = 40;
 
-const percentRed = 0.03;
-const percentYellow = 0.06;
-const percentBlue = 0.02;
+const percentRed = 0.015;
+const percentYellow = 0.05;
+const percentBlue = 0.01;
 
 let redColumns = [];
 let yellowColumns = [];
@@ -16,13 +16,14 @@ let yellowRows = [];
 let blueRows = [];
 
 for (x = 1; x <= rows; x++) {
-  if (Math.random() < percentRed) {
+  let rowRand = Math.random();
+  if (rowRand < percentRed) {
     redRows.push(x);
   } else {
-    if (Math.random() < percentRed + percentYellow) {
+    if (rowRand < percentRed + percentYellow) {
       yellowRows.push(x);
     } else {
-      if (Math.random() < percentRed + percentYellow + percentBlue) {
+      if (rowRand < percentRed + percentYellow + percentBlue) {
         blueRows.push(x);
       }
     }
@@ -30,13 +31,14 @@ for (x = 1; x <= rows; x++) {
 }
 
 for (y = 1; y <= rows; y++) {
-  if (Math.random() < percentRed) {
+  let colRand = Math.random();
+  if (colRand < percentRed) {
     redColumns.push(y);
   } else {
-    if (Math.random() < percentRed + percentYellow) {
+    if (colRand < percentRed + percentYellow) {
       yellowColumns.push(y);
     } else {
-      if (Math.random() < percentRed + percentYellow + percentBlue) {
+      if (colRand < percentRed + percentYellow + percentBlue) {
         blueColumns.push(y);
       }
     }
