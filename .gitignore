@@ -1,3 +1,13 @@
+# SR development environment
+.env
+/*.env
+.gitignore
+.lh/
+git_ignored.js
+for-tests.js
+npm-debug.log
+.DS_Store
+
 # Logs
 logs
 *.log
