@@ -5,16 +5,14 @@ let tableEl = document.getElementById("table");
 const rows = 40;
 const columns = 40;
 
-const proportionRed = 10 / 1000;
-const proportionYellow = 20 / 1000;
-const proportionBlue = 10 / 1000;
-const proportionBlack = 50 / 1000;
+const proportionRed = 15 / 1000;
+const proportionYellow = 50 / 1000;
+const proportionBlue = 15 / 1000;
 
 const colors = {
   r: "#e4071e",
   y: "#Fbe90e",
   b: "#0051f4",
-  k: "#0a0a0a",
 };
 
 let gridArray = [];
@@ -22,12 +20,10 @@ let gridArray = [];
 let redColumns = [];
 let yellowColumns = [];
 let blueColumns = [];
-let blackColumns = [];
 
 let redRows = [];
 let yellowRows = [];
 let blueRows = [];
-let blackRows = [];
 
 for (x = 1; x <= rows; x++) {
   let rowRand = Math.random();
@@ -39,13 +35,6 @@ for (x = 1; x <= rows; x++) {
     } else {
       if (rowRand < proportionRed + proportionYellow + proportionBlue) {
         blueRows.push(x);
-      } else {
-        if (
-          rowRand <
-          proportionRed + proportionYellow + proportionBlue + proportionBlack
-        ) {
-          blackRows.push(x);
-        }
       }
     }
   }
@@ -61,13 +50,6 @@ for (y = 1; y <= rows; y++) {
     } else {
       if (colRand < proportionRed + proportionYellow + proportionBlue) {
         blueColumns.push(y);
-      } else {
-        if (
-          colRand <
-          proportionRed + proportionYellow + proportionBlue + proportionBlack
-        ) {
-          blackColumns.push(y);
-        }
       }
     }
   }
@@ -85,9 +67,6 @@ for (x = 0; x < rows; x++) {
     }
     if (blueRows.includes(x) || blueColumns.includes(y)) {
       currentRow[y] = "b";
-    }
-    if (blackRows.includes(x) || blackColumns.includes(y)) {
-      currentRow[y] = "k";
     }
   }
   gridArray.push(currentRow);
