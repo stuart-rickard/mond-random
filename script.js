@@ -1,5 +1,3 @@
-// const bellThree = require("./utils/utils");
-
 let tableEl = document.getElementById("table");
 
 const rows = 40;
@@ -8,7 +6,9 @@ const columns = 40;
 const proportionRed = 10 / 1000;
 const proportionYellow = 20 / 1000;
 const proportionBlue = 10 / 1000;
-const proportionBlack = 50 / 1000;
+const proportionBlack = 80 / 1000;
+
+const proportionPanelFill = 300 / 1000;
 
 const colors = {
   r: "#e4071e",
@@ -17,94 +17,141 @@ const colors = {
   k: "#0a0a0a",
 };
 
-let gridArray = [];
+const gridArray = [];
+const panels = [];
 
-let redColumns = [];
-let yellowColumns = [];
-let blueColumns = [];
-let blackColumns = [];
+function fillGridWithWhite() {
+  for (x = 0; x < rows; x++) {
+    let currentRow = [];
+    for (y = 0; y < columns; y++) {
+      currentRow.push("w");
+    }
+    gridArray.push(currentRow);
+  }
+}
 
-let redRows = [];
-let yellowRows = [];
-let blueRows = [];
-let blackRows = [];
+function renderGrid() {
+  for (x = 0; x < rows; x++) {
+    let rowElement = document.createElement("tr");
+    tableEl.appendChild(rowElement);
 
-for (x = 1; x <= rows; x++) {
-  let rowRand = Math.random();
-  if (rowRand < proportionRed) {
-    redRows.push(x);
-  } else {
-    if (rowRand < proportionRed + proportionYellow) {
-      yellowRows.push(x);
+    for (y = 0; y < columns; y++) {
+      let colElement = document.createElement("td");
+      let cellColor = gridArray[x][y];
+      if (cellColor != "w") {
+        colElement.style.backgroundColor = colors[cellColor];
+      }
+      rowElement.appendChild(colElement);
+    }
+  }
+}
+
+function setUpPanels() {
+  const notGridRows = [];
+  const notGridColumns = [];
+  // set up grid lines
+  notGridRows.push(0);
+  for (r = 1; r < rows - 1; r++) {
+    if (Math.random() < proportionBlack) {
+      for (i = 0; i < columns; i++) {
+        gridArray[r][i] = "k";
+      }
     } else {
-      if (rowRand < proportionRed + proportionYellow + proportionBlue) {
-        blueRows.push(x);
+      notGridRows.push(r);
+    }
+  }
+  notGridRows.push(rows - 1);
+  notGridColumns.push(0);
+  for (c = 1; c < columns - 1; c++) {
+    if (Math.random() < proportionBlack) {
+      for (i = 0; i < rows; i++) {
+        gridArray[i][c] = "k";
+      }
+    } else {
+      notGridColumns.push(c);
+    }
+  }
+  notGridColumns.push(columns - 1);
+
+  // determine panels location and area
+  const panelRows = [];
+  for (r = 0; r < rows; r++) {
+    if (notGridRows.includes(r)) {
+      let panelRow = [r];
+      while (notGridRows.includes(r)) {
+        r++;
+      }
+      panelRow.push(r);
+      panelRows.push(panelRow);
+    }
+  }
+  console.log(panelRows);
+
+  for (c = 0; c < columns; c++) {
+    if (notGridColumns.includes(c)) {
+      let panelColumn = [c];
+      while (notGridColumns.includes(c)) {
+        c++;
+      }
+      panelColumn.push(c);
+      panelRows.forEach((row) => {
+        panels.push({
+          rows: row,
+          cols: panelColumn,
+          area: (row[1] - row[0]) * (panelColumn[1] - panelColumn[0]),
+        });
+      });
+    }
+  }
+  panels.sort((a, b) => b.area - a.area);
+  console.log(panels);
+}
+
+function fillPanels() {
+  panels.forEach((panel) => {
+    // XXXXX chance of being filled is a bit more if the panel is smaller
+    let color = "";
+    let fillPanel = Math.random() < proportionPanelFill ? true : false;
+    if (fillPanel) {
+      let colorRand = Math.random();
+      if (
+        colorRand <
+        proportionRed / (proportionRed + proportionYellow + proportionBlue)
+      ) {
+        color = "r";
       } else {
         if (
-          rowRand <
-          proportionRed + proportionYellow + proportionBlue + proportionBlack
+          colorRand <
+          (proportionRed + proportionYellow) /
+            (proportionRed + proportionYellow + proportionBlue)
         ) {
-          blackRows.push(x);
+          color = "y";
+        } else {
+          // if (colorRand < proportionRed + proportionYellow + proportionBlue) {
+          color = "b";
+          // } else {
+          //   if (
+          //     colorRand <
+          //     proportionRed +
+          //       proportionYellow +
+          //       proportionBlue +
+          //       proportionBlack
+          //   ) {
+          //     color = "k";
+          //   }
+          // }
         }
       }
     }
-  }
-}
-
-for (y = 1; y <= rows; y++) {
-  let colRand = Math.random();
-  if (colRand < proportionRed) {
-    redColumns.push(y);
-  } else {
-    if (colRand < proportionRed + proportionYellow) {
-      yellowColumns.push(y);
-    } else {
-      if (colRand < proportionRed + proportionYellow + proportionBlue) {
-        blueColumns.push(y);
-      } else {
-        if (
-          colRand <
-          proportionRed + proportionYellow + proportionBlue + proportionBlack
-        ) {
-          blackColumns.push(y);
-        }
+    for (x = panel.rows[0]; x < panel.rows[1]; x++) {
+      for (y = panel.cols[0]; y < panel.cols[1]; y++) {
+        gridArray[x][y] = color;
       }
     }
-  }
+  });
 }
 
-for (x = 0; x < rows; x++) {
-  let currentRow = [];
-  for (y = 0; y < columns; y++) {
-    currentRow.push("w");
-    if (redRows.includes(x) || redColumns.includes(y)) {
-      currentRow[y] = "r";
-    }
-    if (yellowRows.includes(x) || yellowColumns.includes(y)) {
-      currentRow[y] = "y";
-    }
-    if (blueRows.includes(x) || blueColumns.includes(y)) {
-      currentRow[y] = "b";
-    }
-    if (blackRows.includes(x) || blackColumns.includes(y)) {
-      currentRow[y] = "k";
-    }
-  }
-  gridArray.push(currentRow);
-}
-
-for (x = 0; x < rows; x++) {
-  let rowElement = document.createElement("tr");
-  tableEl.appendChild(rowElement);
-
-  for (y = 0; y < columns; y++) {
-    let colElement = document.createElement("td");
-    colElement.setAttribute("data-x", x);
-    colElement.setAttribute("data-y", y);
-    let cellColor = gridArray[x][y];
-    if (cellColor != "w") {
-      colElement.style.backgroundColor = colors[cellColor];
-    }
-    rowElement.appendChild(colElement);
-  }
-}
+fillGridWithWhite();
+setUpPanels();
+fillPanels();
+renderGrid();
