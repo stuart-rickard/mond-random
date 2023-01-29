@@ -9,7 +9,7 @@ const proportionBlue = 10 / 1000;
 const proportionBlack = 80 / 1000;
 
 const proportionPanelFill = 300 / 1000;
-const proportionPanelCombine = 500 / 1000;
+const proportionPanelCombine = 300 / 1000;
 
 const colors = {
   r: "#e4071e",
@@ -19,17 +19,7 @@ const colors = {
 };
 
 const gridArray = [];
-const panelAtts = {};
-const panelsArray = [];
-// todo get rid of next two arrays
-const panelNameList = [];
-const panelAttributesList = [];
-// todo get rid of types object
-const types = {
-  background: { color: "w" },
-  divider: { color: "k" },
-  corner: { color: "y" },
-};
+const panelAttributesCollection = {};
 
 class Type {
   color;
@@ -64,22 +54,9 @@ class Corner extends Type {
 }
 class Panel extends Type {
   panelName;
-  panelAttributes;
-  constructor(color, coordinates, panelAttributes, panelName) {
+  constructor(color, coordinates, panelName) {
     super(color, coordinates);
     this.panelName = panelName;
-    // todo get rid of panelAttributes in Panel closs
-    this.panelAttributes = panelAttributes;
-    this.color = panelAttributes.color;
-  }
-  get panelAtts() {
-    return panelAtts[this.panelName];
-  }
-  substitutePanel() {
-    console.log("sub");
-  }
-  providePanelRange(direction) {
-    console.log(direction);
   }
 }
 class Beat extends Type {
@@ -113,7 +90,7 @@ class PanelAttributes {
   }
 }
 
-function checkCoordinateCorrespondence() {
+function checkCorrespondences() {
   let badCorrespondences = [];
   for (x = 0; x < columns; x++) {
     for (y = 0; y < rows; y++) {
@@ -128,13 +105,21 @@ function checkCoordinateCorrespondence() {
       }
     }
   }
+  Object.keys(panelAttributesCollection).forEach((key) => {
+    if (key != panelAttributesCollection[key].panelName) {
+      badCorrespondences.push({
+        key: key,
+        panelName: panelAttributesCollection[key].panelName,
+      });
+    }
+  });
   if (badCorrespondences.length != 0) {
-    console.error("Bad Coordinate Correspondence");
+    console.error("Bad Correspondence");
     console.log(badCorrespondences);
   }
   // todo delete else
   else {
-    console.log("Coordinate correspondence OK");
+    console.log("Correspondence OK");
   }
 }
 // todo confirm column and row are used correctly throughout; start with render because that can't be changed
@@ -155,62 +140,59 @@ function setUpPanels() {
   // set up divider lines, which are never on the outside of the image
   // first the divider rows...
   notGridRows.push(0);
-  for (r = 1; r < rows - 1; r++) {
+  for (y = 1; y < rows - 1; y++) {
     if (Math.random() < proportionBlack) {
-      for (i = 0; i < columns; i++) {
-        let divider = new Divider(null, [i, r]);
-        gridArray[i][r] = divider;
+      for (x = 0; x < columns; x++) {
+        let divider = new Divider(null, [x, y]);
+        gridArray[x][y] = divider;
       }
     } else {
-      notGridRows.push(r);
+      notGridRows.push(y);
     }
   }
   notGridRows.push(rows - 1);
   // ...then the divider columns, and identify the corners too
   notGridColumns.push(0);
-  for (c = 1; c < columns - 1; c++) {
+  for (x = 1; x < columns - 1; x++) {
     if (Math.random() < proportionBlack) {
-      for (i = 0; i < rows; i++) {
-        if (gridArray[c][i] instanceof Divider) {
-          let corner = new Corner(null, [c, i]);
-          gridArray[c][i] = corner;
+      for (y = 0; y < rows; y++) {
+        if (gridArray[x][y] instanceof Divider) {
+          let corner = new Corner(null, [x, y]);
+          gridArray[x][y] = corner;
         } else {
-          let divider = new Divider(null, [c, i]);
-          gridArray[c][i] = divider;
+          let divider = new Divider(null, [x, y]);
+          gridArray[x][y] = divider;
         }
       }
     } else {
-      notGridColumns.push(c);
+      notGridColumns.push(x);
     }
   }
   notGridColumns.push(columns - 1);
-  console.log(gridArray);
-
   // determine panels location and area
-  let panelCounter = 0;
-  const panelRows = [];
-  for (r = 0; r < rows; r++) {
-    if (notGridRows.includes(r)) {
-      let panelRow = [r];
-      while (notGridRows.includes(r)) {
-        r++;
+  const panelRowRanges = [];
+  for (y = 0; y < rows; y++) {
+    if (notGridRows.includes(y)) {
+      let panelRow = [y];
+      while (notGridRows.includes(y)) {
+        y++;
       }
-      panelRow.push(r);
-      panelRows.push(panelRow);
+      panelRow.push(y);
+      panelRowRanges.push(panelRow);
     }
   }
   // todo clean up technical debt here
-  let panelRowNumber = 0;
-  for (c = 0; c < columns; c++) {
-    if (notGridColumns.includes(c)) {
-      let panelColumn = [c];
-      while (notGridColumns.includes(c)) {
-        c++;
+  let panelColumnNumber = 0;
+  for (x = 0; x < columns; x++) {
+    if (notGridColumns.includes(x)) {
+      let colRange = [x];
+      while (notGridColumns.includes(x)) {
+        x++;
       }
-      panelColumn.push(c);
-      panelRows.forEach((row) => {
+      colRange.push(x);
+      panelRowRanges.forEach((rowRange) => {
         // let panelName = "panel_" + panelCounter.toString();
-        let panelColumnNumber = panelRows.indexOf(row);
+        let panelRowNumber = panelRowRanges.indexOf(rowRange);
         let panelName =
           "panel_" +
           panelColumnNumber.toString() +
@@ -230,41 +212,25 @@ function setUpPanels() {
               "_" +
               (panelRowNumber - 1).toString()
             : null;
-        panelsArray.push({
-          panelName: panelName,
-          rows: row,
-          cols: panelColumn,
-          area: (row[1] - row[0]) * (panelColumn[1] - panelColumn[0]),
-        });
-        panelNameList.push(panelName);
-        types[panelName] = {
-          color: null,
-          rows: row,
-          cols: panelColumn,
-          area: (row[1] - row[0]) * (panelColumn[1] - panelColumn[0]),
-        };
 
         let panelAttributes = new PanelAttributes(
           panelName,
-          row,
-          panelColumn,
+          colRange,
+          rowRange,
           null,
           neighborPanelLeft,
           neighborPanelAbove
         );
-        panelAttributesList.push(panelAttributes);
-        panelCounter++;
-        panelAtts[panelName] = panelAttributes;
+        panelAttributesCollection[panelName] = panelAttributes;
       });
-      panelRowNumber++;
+      panelColumnNumber++;
     }
   }
-  // panels.sort((a, b) => b.area - a.area);
-  console.log(panelAtts);
+  console.log(panelAttributesCollection);
 }
 
 function fillPanels() {
-  panelAttributesList.forEach((panel) => {
+  Object.values(panelAttributesCollection).forEach((panel) => {
     if (Math.random() < proportionPanelFill) {
       let colorRand = Math.random();
       // todo get rid of nested ifs
@@ -299,34 +265,83 @@ function fillPanels() {
     } else {
       panel.color = "w";
     }
-    for (x = panel.rowRange[0]; x < panel.rowRange[1]; x++) {
-      for (y = panel.colRange[0]; y < panel.colRange[1]; y++) {
-        gridArray[x][y] = new Panel(null, [x, y], panel, panel.panelName);
+    // let assignedPanel = new Panel(null, [x, y], panel.panelName);
+    for (x = panel.colRange[0]; x < panel.colRange[1]; x++) {
+      for (y = panel.rowRange[0]; y < panel.rowRange[1]; y++) {
+        gridArray[x][y] = new Panel(null, [x, y], panel.panelName);
       }
     }
   });
+  console.log(panelAttributesCollection);
   console.log(gridArray);
 }
 
 function combinePanels() {
+  let newColor;
+  let leftRightPairs = [];
   // look at each panel
-  Object.values(panelAtts).forEach((panel) => {
+  Object.values(panelAttributesCollection).forEach((panel) => {
+    // if (Math.random() < proportionPanelCombine) {
+    //   // panel is candidate for pairing
+    //   // decide whether pair is up/down or side/side
+    // }
+    // // de-conflict the panels; no panel
+
     // Randomize combinations to right and/or below
-    // A combination to the right is to convert the color of adjacent Divider and Panel objects
+    if (panel.neighborPanelLeft) {
+      if (Math.random() < proportionPanelCombine) {
+        newColor = panelAttributesCollection[panel.neighborPanelLeft].color;
+        panel.color = newColor;
+        // look for dividers and change their  color
+        let x = panel.colRange[0] - 1;
+        while (gridArray[x][panel.rowRange[0]] instanceof Divider) {
+          for (let y = panel.rowRange[0]; y < panel.rowRange[1]; y++) {
+            gridArray[x][y].color = newColor;
+          }
+          x--;
+        }
+        leftRightPairs.push([
+          panel.panelName,
+          panelAttributesCollection[panel.neighborPanelLeft].panelName,
+        ]);
+      }
+    }
+    // keep track of pairs
+    if (panel.neighborPanelAbove) {
+      if (Math.random() < proportionPanelCombine) {
+        // check whether panel is already part of left/right pair; if so expand area
+        newColor = panelAttributesCollection[panel.neighborPanelAbove].color;
+        panel.color = newColor;
+
+        // look for dividers and change their color
+        let y = panel.rowRange[0] - 1;
+        while (gridArray[panel.colRange[0]][y] instanceof Divider) {
+          for (let x = panel.colRange[0]; x < panel.colRange[1]; x++) {
+            gridArray[x][y].color = newColor;
+          }
+          y--;
+        }
+      }
+    }
   });
+  console.log(leftRightPairs);
 }
 
 function renderGrid() {
-  for (x = 0; x < columns; x++) {
+  // for (x = 0; x < columns; x++) {
+  for (y = 0; y < rows; y++) {
     let rowElement = document.createElement("tr");
     tableEl.appendChild(rowElement);
 
-    for (y = 0; y < rows; y++) {
+    for (x = 0; x < columns; x++) {
       let colElement = document.createElement("td");
-      let cellColor = gridArray[x][y].provideColor();
-      if (cellColor != "w") {
-        colElement.style.backgroundColor = colors[cellColor];
-      }
+      let cellColor = gridArray[x][y].color
+        ? gridArray[x][y].color
+        : panelAttributesCollection[gridArray[x][y].panelName].color;
+      // if (cellColor != "w") {
+      colElement.style.backgroundColor = colors[cellColor];
+      // colElement.innerText = x.toString() + "," + y.toString();
+      // }
       rowElement.appendChild(colElement);
     }
   }
@@ -335,7 +350,6 @@ function renderGrid() {
 fillGridWithWhite();
 setUpPanels();
 fillPanels();
-// combinePanels();
+combinePanels();
 renderGrid();
-checkCoordinateCorrespondence();
-console.log(gridArray[0][0].panelAtts.color);
+checkCorrespondences();
