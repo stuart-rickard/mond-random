@@ -651,3 +651,4 @@ if (settings.allowElls) addBeats();
 console.log(panelsCollection);
 render();
 checkCorrespondences();
+console.log("this approach got too complicated");
