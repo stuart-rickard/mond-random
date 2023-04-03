@@ -128,7 +128,23 @@ function populateColorsGrid() {
   }
 }
 
-function combinePanels() {}
+function combinePanels() {
+  // let flat = colorsGrid.flat()?
+  for (panel of colorsGrid.flat()) {
+    if (panel.row % 2 == 0 && panel.column % 2 == 0) {
+      if (Math.random() < settings.proportionPanelCombine) {
+        panel.extendRow = panel.column + 2;
+      }
+      if (Math.random() < settings.proportionPanelCombine) {
+        panel.extendColumn = panel.row + 2;
+      }
+    }
+    // while not done, expand color
+    // done is when no new panels have extends
+    // do we only look at direction of extends? can you go backward?
+    // mark panels as handled
+  }
+}
 
 function render() {
   for (let rowIndex = 0; rowIndex < colorsGrid.length; rowIndex++) {
@@ -141,21 +157,24 @@ function render() {
         widthCounter < columns[columnObj.column].width;
         widthCounter++
       ) {
-        rowElement.appendChild(colElement);
+        let cloneColElement = colElement.cloneNode();
+        rowElement.appendChild(cloneColElement);
       }
     }
     for (
       let heightCounter = 0;
       heightCounter < rows[columnObj.row].width;
       heightCounter++
-    )
-      tableEl.appendChild(rowElement);
+    ) {
+      let cloneRowElement = rowElement.cloneNode(true);
+      tableEl.appendChild(cloneRowElement);
+    }
   }
 }
 
 setUpColumnsAndRows();
 populateColorsGrid();
-// combinePanels();
+combinePanels();
 render();
 cl(rows);
 cl(columns);
