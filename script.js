@@ -129,21 +129,85 @@ function populateColorsGrid() {
 }
 
 function combinePanels() {
-  // let flat = colorsGrid.flat()?
-  for (panel of colorsGrid.flat()) {
-    if (panel.row % 2 == 0 && panel.column % 2 == 0) {
-      if (Math.random() < settings.proportionPanelCombine) {
-        panel.extendRow = panel.column + 2;
-      }
-      if (Math.random() < settings.proportionPanelCombine) {
-        panel.extendColumn = panel.row + 2;
+  function checkAndApplyRange(xMin, xMax, yMin, yMax, color) {
+    for (let row = yMin; row <= yMax; row++) {
+      for (let col = xMin; col <= xMax; col++) {
+        let cEl = colorsGrid[row][col];
+        // if the cell would expand the group, restart with the new range
+
+        // update the group
+        // extend
       }
     }
-    // while not done, expand color
-    // done is when no new panels have extends
-    // do we only look at direction of extends? can you go backward?
-    // mark panels as handled
   }
+
+  for (panel of colorsGrid.flat()) {
+    panel.group = {
+      xMin: panel.row,
+      xMax: panel.row,
+      yMin: panel.column,
+      yMax: panel.column,
+      color: panel.color,
+      extend: false,
+    };
+    if (panel.row % 2 == 0 && panel.column % 2 == 0)
+      if (panel.column < columns.length - 2) {
+        if (Math.random() < settings.proportionPanelCombine) {
+          panel.group.xMax = panel.column + 2;
+          panel.group.extend = true;
+        }
+        if (panel.row < rows.length - 2) {
+          if (Math.random() < settings.proportionPanelCombine) {
+            panel.group.yMax = panel.row + 2;
+            panel.group.extend = true;
+          }
+        }
+      }
+  }
+  cl(colorsGrid);
+  // overlap approach
+  // go through grid, group panels based on extends
+  for (rowElement of colorsGrid) {
+    for (panel of rowElement) {
+      if (panel.group.extend) {
+        checkAndApplyRange(
+          panel.group.xMin,
+          panel.group.xMax,
+          panel.group.yMin,
+          panel.group.yMax,
+          panel.group.color
+        );
+      }
+    }
+
+    if (false) {
+      // create a new max overlap
+      let expandedOverlap = {
+        rowRange: [
+          Math.min(...gridObj.overlapList.map((obj) => obj.rowRange[0])),
+          Math.max(...gridObj.overlapList.map((obj) => obj.rowRange[1])),
+        ],
+        columnRange: [
+          Math.min(...gridObj.overlapList.map((obj) => obj.columnRange[0])),
+          Math.max(...gridObj.overlapList.map((obj) => obj.columnRange[1])),
+        ],
+        // fix color
+        color: gridObj.color,
+      };
+      // delete old overlaps
+
+      // apply max to affected panels
+      gridObj.overlapList.push(expandedOverlap);
+      // check whether we created a new
+    }
+  }
+  // collect larger panel info in array for each panel
+
+  // while there are any panels with overlaps, go through grid merging panel overlaps
+
+  cl(colorsGrid);
+
+  // delete group property?
 }
 
 function render() {
@@ -176,6 +240,30 @@ setUpColumnsAndRows();
 populateColorsGrid();
 combinePanels();
 render();
-cl(rows);
-cl(columns);
+// cl(rows);
+// cl(columns);
 cl(colorsGrid);
+
+// // add overLap info to all affected grid elements
+// let overlap = {
+//   groupRange: {
+//     xMin:columnElement.row,
+//     xMax:columnElement.row,
+//     yMin:columnElement.column,
+//     yMax:columnElement.extendRow,
+//   },
+//   applied: {
+//     xMin:columnElement.row,
+//     xMax:columnElement.row,
+//     yMin:columnElement.column,
+//     yMax:columnElement.extendRow,
+//   },
+//   color: columnElement.color,
+// };
+// for (
+//   let colNum = columnElement.column;
+//   colNum <= columnElement.extendRow;
+//   colNum++
+// ) {
+//   colorsGrid[columnElement.row][colNum].overlapList.push(overlap);
+// }
