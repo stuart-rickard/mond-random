@@ -5,16 +5,16 @@ function cl(log) {
 let tableEl = document.getElementById("table");
 
 let settings = {
-  rows: 40,
-  columns: 40,
+  rows: 55,
+  columns: 55,
 
   weightRed: 10,
   weightYellow: 20,
   weightBlue: 10,
 
-  proportionDivider: 80 / 1000,
+  proportionDivider: 65 / 1000,
   proportionPanelFill: 300 / 1000,
-  proportionPanelCombine: 300 / 1000,
+  proportionPanelCombine: 150 / 1000,
 
   colors: {
     red: "#e4071e",
@@ -57,7 +57,13 @@ function setUpColumnsAndRows() {
   function identifyDividerIndices(array, dimension) {
     for (let index = 1; index < dimension - 1; index++) {
       if (Math.random() < settings.proportionDivider) {
-        array.push(index);
+        if (array.includes(index - 1) || array.includes(index - 2)) {
+          if (Math.random() < 0.15) {
+            array.push(index);
+          }
+        } else {
+          array.push(index);
+        }
       }
     }
   }
@@ -130,26 +136,55 @@ function populateColorsGrid() {
 
 function combinePanels() {
   function checkAndApplyRange(xMin, xMax, yMin, yMax, color) {
+    console.log([xMin, xMax, yMin, yMax, color]);
     for (let row = yMin; row <= yMax; row++) {
-      for (let col = xMin; col <= xMax; col++) {
-        let cEl = colorsGrid[row][col];
+      let breakInnerLoop = false;
+      for (let col = xMin; col <= xMax && !breakInnerLoop; col++) {
+        let cell = colorsGrid[row][col];
+        cell.color = color;
+        let cellGroup = colorsGrid[row][col].group;
         // if the cell would expand the group, restart with the new range
-
+        if (
+          cellGroup.xMin < xMin ||
+          cellGroup.xMax > xMax ||
+          cellGroup.yMin < yMin ||
+          cellGroup.yMax > yMax
+        ) {
+          // extend range
+          yMin = Math.min(cellGroup.yMin, yMin);
+          yMax = Math.max(cellGroup.yMax, yMax);
+          xMin = Math.min(cellGroup.xMin, xMin);
+          xMax = Math.max(cellGroup.xMax, xMax);
+          // restart
+          breakInnerLoop = true;
+          row = yMin - 1;
+        }
         // update the group
-        // extend
+        cellGroup.xMin = xMin;
+        cellGroup.xMax = xMax;
+        cellGroup.yMin = yMin;
+        cellGroup.yMax = yMax;
+        // add color for clarity
+        cellGroup.color = color;
+        // add marker
+        cellGroup.marker = [xMin, xMax, yMin, yMax, color];
+        // already extended to remove extend flag
+        cellGroup.extend = false;
       }
     }
   }
 
+  // prepare panels to have groups
   for (panel of colorsGrid.flat()) {
     panel.group = {
-      xMin: panel.row,
-      xMax: panel.row,
-      yMin: panel.column,
-      yMax: panel.column,
+      xMin: panel.column,
+      xMax: panel.column,
+      yMin: panel.row,
+      yMax: panel.row,
       color: panel.color,
       extend: false,
     };
+    // randomly select panels to extend to the right or down
     if (panel.row % 2 == 0 && panel.column % 2 == 0)
       if (panel.column < columns.length - 2) {
         if (Math.random() < settings.proportionPanelCombine) {
@@ -165,7 +200,7 @@ function combinePanels() {
       }
   }
   cl(colorsGrid);
-  // overlap approach
+
   // go through grid, group panels based on extends
   for (rowElement of colorsGrid) {
     for (panel of rowElement) {
@@ -179,31 +214,7 @@ function combinePanels() {
         );
       }
     }
-
-    if (false) {
-      // create a new max overlap
-      let expandedOverlap = {
-        rowRange: [
-          Math.min(...gridObj.overlapList.map((obj) => obj.rowRange[0])),
-          Math.max(...gridObj.overlapList.map((obj) => obj.rowRange[1])),
-        ],
-        columnRange: [
-          Math.min(...gridObj.overlapList.map((obj) => obj.columnRange[0])),
-          Math.max(...gridObj.overlapList.map((obj) => obj.columnRange[1])),
-        ],
-        // fix color
-        color: gridObj.color,
-      };
-      // delete old overlaps
-
-      // apply max to affected panels
-      gridObj.overlapList.push(expandedOverlap);
-      // check whether we created a new
-    }
   }
-  // collect larger panel info in array for each panel
-
-  // while there are any panels with overlaps, go through grid merging panel overlaps
 
   cl(colorsGrid);
 
@@ -244,26 +255,7 @@ render();
 // cl(columns);
 cl(colorsGrid);
 
-// // add overLap info to all affected grid elements
-// let overlap = {
-//   groupRange: {
-//     xMin:columnElement.row,
-//     xMax:columnElement.row,
-//     yMin:columnElement.column,
-//     yMax:columnElement.extendRow,
-//   },
-//   applied: {
-//     xMin:columnElement.row,
-//     xMax:columnElement.row,
-//     yMin:columnElement.column,
-//     yMax:columnElement.extendRow,
-//   },
-//   color: columnElement.color,
-// };
-// for (
-//   let colNum = columnElement.column;
-//   colNum <= columnElement.extendRow;
-//   colNum++
-// ) {
-//   colorsGrid[columnElement.row][colNum].overlapList.push(overlap);
-// }
+// avoid groups that split the canvas
+// avoid one row or one column
+// avoid too much regularity / lack of assymetry
+// avoid no color
