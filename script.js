@@ -1,7 +1,3 @@
-function cl(log) {
-  console.log(log);
-}
-
 let tableEl = document.getElementById("table");
 
 let settings = {
@@ -28,6 +24,16 @@ let settings = {
 let columns = [];
 let rows = [];
 let colorsGrid = [];
+
+function reset() {
+  columns = [];
+  rows = [];
+  colorsGrid = [];
+  // clear tableEl
+  while (tableEl.firstChild) {
+    tableEl.removeChild(tableEl.firstChild);
+  }
+}
 
 function assignPanelColor() {
   let weightAndFillFactor =
@@ -136,11 +142,11 @@ function populateColorsGrid() {
 
 function combinePanels() {
   function checkAndApplyRange(xMin, xMax, yMin, yMax, color) {
-    console.log([xMin, xMax, yMin, yMax, color]);
     for (let row = yMin; row <= yMax; row++) {
       let breakInnerLoop = false;
       for (let col = xMin; col <= xMax && !breakInnerLoop; col++) {
         let cell = colorsGrid[row][col];
+        console.log(col, cell);
         cell.color = color;
         let cellGroup = colorsGrid[row][col].group;
         // if the cell would expand the group, restart with the new range
@@ -199,7 +205,6 @@ function combinePanels() {
         }
       }
   }
-  cl(colorsGrid);
 
   // go through grid, group panels based on extends
   for (rowElement of colorsGrid) {
@@ -215,10 +220,6 @@ function combinePanels() {
       }
     }
   }
-
-  cl(colorsGrid);
-
-  // delete group property?
 }
 
 function render() {
@@ -247,15 +248,24 @@ function render() {
   }
 }
 
-setUpColumnsAndRows();
-populateColorsGrid();
-combinePanels();
-render();
-// cl(rows);
-// cl(columns);
-cl(colorsGrid);
+function main() {
+  reset();
+  setUpColumnsAndRows();
+  populateColorsGrid();
+  combinePanels();
+  render();
+  console.log(colorsGrid);
+  console.log("--------------------");
+}
+
+document.addEventListener("click", main);
+document.addEventListener("tap", main);
+document.addEventListener("keydown", main);
+
+main();
 
 // avoid groups that split the canvas
 // avoid one row or one column
 // avoid too much regularity / lack of assymetry
 // avoid no color
+// delete group property?
