@@ -2,21 +2,31 @@
 <html>
   <head>
     <title>Mond Random</title>
+    <link rel="icon" href="mond.png" type="image/png" />
+    <style>
+      td {
+        height: 15px;
+        width: 15px;
+        padding: 0px;
+      }
+    </style>
   </head>
-  <style>
-    td {
-      height: 15px;
-      width: 15px;
-      padding: 0px;
-      /* background-color: #f6f6eb; */
-    }
-    table {
-      border-spacing: 0px;
-    }
-    /* consider adding a frame */
-  </style>
   <body>
-    <table id="table"></table>
+    <div style="display: flex; justify-content: center; margin-top: 40px">
+      <table id="table" ; style="border-spacing: 0px"></table>
+    </div>
+    <div
+      style="
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: sans-serif;
+        color: #4a4a4a;
+      "
+    >
+      Press any key or tap to refresh
+    </div>
   </body>
   <script src="./script.js"></script>
 </html>
